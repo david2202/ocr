@@ -1,5 +1,9 @@
 server:
-    port: 8080
+    port: 8443
+    ssl:
+        key-store: classpath:sample.jks
+        key-store-password: secret
+        key-password: password
     tomcat:
         access-log-enabled: true
         access-log-pattern: "%h %l %u %t \"%r\" %s %b %D"

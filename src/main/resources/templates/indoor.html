@@ -6,51 +6,71 @@
 <head>
     <title>Indoor</title>
     <style>
-        <!--#videoContainer {-->
-            <!--zoom: 0.5;-->
-            <!-- -moz-transform: scale(0.5);-->
+        #videoContainer {
+            zoom: 0.9;
+            -moz-transform: scale(0.9);
+        }
+        #imageContainer {
+            zoom: 0.9;
+            -moz-transform: scale(0.9);
+        }
+        /* centered columns styles */
+        <!--.row-centered {-->
+            <!--text-align:center;-->
         <!--}-->
-/* centered columns styles */
-.row-centered {
-    text-align:center;
-}
-.col-centered {
-    display:inline-block;
-    float:none;
-    /* reset the text-align */
-    text-align:left;
-    /* inline-block space fix */
-    margin-right:-4px;
-}    </style>
+        <!--.col-centered {-->
+            <!--display:inline-block;-->
+            <!--float:none;-->
+            <!--/* reset the text-align */-->
+            <!--text-align:left;-->
+            <!--/* inline-block space fix */-->
+            <!--margin-right:-4px;-->
+        <!--}-->
+        #videoContainer {
+            width: 320px;
+            height: 240px;
+            overflow: hidden;
+            display: block;
+            border-style: solid;
+            border-width: 5px;
+        }
+        #video {
+            margin-left: -160px;
+            margin-top: -120px;
+        }
+        #image {
+            border-style: solid;
+            border-width: 5px;
+        }
+    </style>
 </head>
 
 <body>
     <div layout:fragment="content" class="container-fluid">
-        <div class="row row-centered">
-            <div id="videoContainer" class="class=col-md-12 col-centered">
-                <video id="video" width="320" height="240" autoplay="true"></video>
+        <div class="row">
+            <div id="imageContainer" class="col-xs-6">
+                <img id="image" class="img-responsive" width="320" height="240" />
             </div>
-        </div>
-        <div class="row row-centered">
-            <div id="photoContainer" class="class=col-md-12 col-centered">
-                <img id="image" width="320" height="240"></img>
+            <div id="videoContainer" class="col-xs-6 scanner">
+                <video id="video" width="640" height="480" autoplay="true"></video>
             </div>
         </div>
         <div class="row">
-            <span id="address"/>
+            <div class="col-med-12">
+                <span id="address"/>
+            </div>
         </div>
         <script th:inline="javascript">
         /*<![CDATA[*/
         var cameraShutter = new Audio([[@{'/sounds/cameraShutter.mp3'}]]);
         var beep = new Audio([[@{'/sounds/scannerBeep.mp3'}]]);
-        // Get access to the camera!
-        if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
-               $("#video")[0].src = window.URL.createObjectURL(stream);
-               $("#video")[0].play();
-            });
+        if (window.location.href.includes("8443")) {
+            cameraShutter = new Audio('http://' + window.location.hostname + ':8080/sounds/cameraShutter.mp3');
+            beep = new Audio('http://' + window.location.hostname + ':8080/sounds/scannerBeep.mp3');
+        } else {
+            cameraShutter = new Audio('http://' + window.location.hostname + '/sounds/cameraShutter.mp3');
+            beep = new Audio('http://' + window.location.hostname + '/sounds/scannerBeep.mp3');
         }
-        /*]]>*/
 
         // Trigger photo take
         $("#video").click(function() {
@@ -58,7 +78,7 @@
 	        var canvas = document.createElement('canvas');
 	        canvas.width = 320;
 	        canvas.height = 240;
-	        canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+	        canvas.getContext('2d').drawImage(video, 160, 120, 320, 240, 0, 0, 320, 240);
 
             var imgUrl = canvas.toDataURL("image/jpeg", 0.75);
 
@@ -70,6 +90,53 @@
                 $("#address").text(data.ParsedResults[0].ParsedText);
 	        });
         });
+
+        function init() {
+            MediaStreamTrack.getSources(gotSources);
+        }
+
+        function gotSources(sourceInfos) {
+            for (var i = 0; i !== sourceInfos.length; ++i) {
+                var sourceInfo = sourceInfos[i];
+                var option = document.createElement('option');
+                option.value = sourceInfo.id;
+                if (sourceInfo.kind === 'video') {
+                    if (sourceInfo.facing === 'environment' || sourceInfo.label.indexOf('back') > -1) {
+                        sourceSelected(sourceInfo.id);
+                        return;
+                    }
+                }
+            }
+            // Didn't find a back camera so use the first one
+            for (var i = 0; i !== sourceInfos.length; ++i) {
+                var sourceInfo = sourceInfos[i];
+                var option = document.createElement('option');
+                option.value = sourceInfo.id;
+                if (sourceInfo.kind === 'video') {
+                    sourceSelected(sourceInfo.id);
+                    break;
+                }
+            }
+        }
+
+        function sourceSelected(videoSource) {
+            var constraints = {
+                video: {
+                    optional: [{sourceId: videoSource}]
+                }
+            }
+
+            // Put video listeners into place
+            navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+               $("#video")[0].src = window.URL.createObjectURL(stream);
+               $("#video")[0].play();
+            });
+        }
+
+        jQuery(document).ready(function ($) {
+            init();
+        });
+        /*]]>*/
         </script>
     </div>
 </body>
