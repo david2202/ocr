@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/web/thymeleaf/layout"
+      layout:decorator="layout"
+      th:with="currentPage='indoor'">
+<head>
+    <title>Indoor</title>
+    <style>
+        <!--#videoContainer {-->
+            <!--zoom: 0.5;-->
+            <!-- -moz-transform: scale(0.5);-->
+        <!--}-->
+/* centered columns styles */
+.row-centered {
+    text-align:center;
+}
+.col-centered {
+    display:inline-block;
+    float:none;
+    /* reset the text-align */
+    text-align:left;
+    /* inline-block space fix */
+    margin-right:-4px;
+}    </style>
+</head>
+
+<body>
+    <div layout:fragment="content" class="container-fluid">
+        <div class="row row-centered">
+            <div id="videoContainer" class="class=col-md-12 col-centered">
+                <video id="video" width="320" height="240" autoplay="true"></video>
+            </div>
+        </div>
+        <div class="row row-centered">
+            <div id="photoContainer" class="class=col-md-12 col-centered">
+                <img id="image" width="320" height="240"></img>
+            </div>
+        </div>
+        <div class="row">
+            <span id="address"/>
+        </div>
+        <script th:inline="javascript">
+        /*<![CDATA[*/
+        var cameraShutter = new Audio([[@{'/sounds/cameraShutter.mp3'}]]);
+        var beep = new Audio([[@{'/sounds/scannerBeep.mp3'}]]);
+        // Get access to the camera!
+        if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+               $("#video")[0].src = window.URL.createObjectURL(stream);
+               $("#video")[0].play();
+            });
+        }
+        /*]]>*/
+
+        // Trigger photo take
+        $("#video").click(function() {
+            cameraShutter.play();
+	        var canvas = document.createElement('canvas');
+	        canvas.width = 320;
+	        canvas.height = 240;
+	        canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+
+            var imgUrl = canvas.toDataURL("image/jpeg", 0.75);
+
+            $("#image").attr("src", imgUrl);
+
+	        $.post("https://api.ocr.space/parse/image", {apikey:"72fbaecdea88957", language:"eng", isOverlayRequired:"false", base64Image:imgUrl},
+	        function(data) {
+	            beep.play();
+                $("#address").text(data.ParsedResults[0].ParsedText);
+	        });
+        });
+        </script>
+    </div>
+</body>
+</html>
