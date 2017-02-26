@@ -6,26 +6,26 @@
 <head>
     <title>Indoor</title>
     <style>
-        #videoContainer {
-            zoom: 0.9;
-            -moz-transform: scale(0.9);
+        @media screen and (max-width: 800px) {
+            #videoContainer {
+                zoom: 0.825;
+                -moz-transform: scale(0.825);
+            }
+            #imageContainer {
+                zoom: 0.9;
+                -moz-transform: scale(0.9);
+            }
         }
-        #imageContainer {
-            zoom: 0.9;
-            -moz-transform: scale(0.9);
+        @media screen and (min-width: 801px) {
+            #videoContainer {
+                zoom: 1.47;
+                -moz-transform: scale(1.47);
+            }
+            #imageContainer {
+                zoom: 1.6;
+                -moz-transform: scale(1.6);
+            }
         }
-        /* centered columns styles */
-        <!--.row-centered {-->
-            <!--text-align:center;-->
-        <!--}-->
-        <!--.col-centered {-->
-            <!--display:inline-block;-->
-            <!--float:none;-->
-            <!--/* reset the text-align */-->
-            <!--text-align:left;-->
-            <!--/* inline-block space fix */-->
-            <!--margin-right:-4px;-->
-        <!--}-->
         #videoContainer {
             width: 320px;
             height: 240px;
@@ -37,6 +37,12 @@
         #video {
             margin-left: -160px;
             margin-top: -120px;
+        }
+        #imageContainer {
+            width: 320px;
+            height: 240px;
+            overflow: hidden;
+            display: block;
         }
         #image {
             border-style: solid;
@@ -57,13 +63,22 @@
         </div>
         <div class="row">
             <div class="col-med-12">
-                <span id="address"/>
+                <div class="col-xs-12 scanner">
+                    <span id="address"/>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-med-12">
+                <div class="col-xs-12 scanner">
+                    <button id="enableBeep">Enable beep</button>
+                </div>
             </div>
         </div>
         <script th:inline="javascript">
         /*<![CDATA[*/
-        var cameraShutter = new Audio([[@{'/sounds/cameraShutter.mp3'}]]);
-        var beep = new Audio([[@{'/sounds/scannerBeep.mp3'}]]);
+        var cameraShutter;
+        var beep;
         if (window.location.href.includes("8443")) {
             cameraShutter = new Audio('http://' + window.location.hostname + ':8080/sounds/cameraShutter.mp3');
             beep = new Audio('http://' + window.location.hostname + ':8080/sounds/scannerBeep.mp3');
@@ -78,7 +93,7 @@
 	        var canvas = document.createElement('canvas');
 	        canvas.width = 320;
 	        canvas.height = 240;
-	        canvas.getContext('2d').drawImage(video, 160, 120, 320, 240, 0, 0, 320, 240);
+	        canvas.getContext('2d').drawImage(video, 135, 110, 320, 240, 0, 0, 320, 240);
 
             var imgUrl = canvas.toDataURL("image/jpeg", 0.75);
 
@@ -90,33 +105,31 @@
                 $("#address").text(data.ParsedResults[0].ParsedText);
 	        });
         });
+        $("#enableBeep").click(function() {
+            beep.play();
+        });
 
         function init() {
-            MediaStreamTrack.getSources(gotSources);
-        }
-
-        function gotSources(sourceInfos) {
-            for (var i = 0; i !== sourceInfos.length; ++i) {
-                var sourceInfo = sourceInfos[i];
-                var option = document.createElement('option');
-                option.value = sourceInfo.id;
-                if (sourceInfo.kind === 'video') {
-                    if (sourceInfo.facing === 'environment' || sourceInfo.label.indexOf('back') > -1) {
-                        sourceSelected(sourceInfo.id);
-                        return;
+            var found = false;
+            navigator.mediaDevices.enumerateDevices().then(function(devices) {
+                devices.forEach(function(device) {
+                    if (device.kind === 'videoinput') {
+                        if (device.facing === 'environment' || device.label.indexOf('back') > -1) {
+                            sourceSelected(device.deviceId);
+                            found = true;
+                        }
                     }
+                });
+                if (!found) {
+                    // Didn't find a back camera so use the first one
+                    devices.forEach(function(device) {
+                        if (device.kind === 'videoinput') {
+                            sourceSelected(device.deviceId);
+                            found = true;
+                        }
+                    });
                 }
-            }
-            // Didn't find a back camera so use the first one
-            for (var i = 0; i !== sourceInfos.length; ++i) {
-                var sourceInfo = sourceInfos[i];
-                var option = document.createElement('option');
-                option.value = sourceInfo.id;
-                if (sourceInfo.kind === 'video') {
-                    sourceSelected(sourceInfo.id);
-                    break;
-                }
-            }
+            });
         }
 
         function sourceSelected(videoSource) {
