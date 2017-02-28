@@ -4,6 +4,7 @@
       layout:decorator="layout"
       th:with="currentPage='indoor'">
 <head>
+    <script th:src="@{/scripts/caman.full.min-4.1.1.js}" src="../static/scripts/caman.full.min-4.1.1.js"></script>
     <title>Indoor</title>
     <style>
         @media screen and (max-width: 800px) {
@@ -79,7 +80,7 @@
         /*<![CDATA[*/
         var cameraShutter;
         var beep;
-        if (window.location.href.includes("8443")) {
+        if (window.location.href.includes("8080") || window.location.href.includes("8443")) {
             cameraShutter = new Audio('http://' + window.location.hostname + ':8080/sounds/cameraShutter.mp3');
             beep = new Audio('http://' + window.location.hostname + ':8080/sounds/scannerBeep.mp3');
         } else {
@@ -95,16 +96,19 @@
 	        canvas.height = 240;
 	        canvas.getContext('2d').drawImage(video, 135, 110, 320, 240, 0, 0, 320, 240);
 
-            var imgUrl = canvas.toDataURL("image/jpeg", 0.75);
+            Caman(canvas, function () {
+              this.greyscale().render();
+            });
 
-            $("#image").attr("src", imgUrl);
+            $("#image").attr("src", canvas.toDataURL("image/jpeg", 0.75));
 
-	        $.post("https://api.ocr.space/parse/image", {apikey:"72fbaecdea88957", language:"eng", isOverlayRequired:"false", base64Image:imgUrl},
+	        $.post("https://apipro3.ocr.space/parse/image", {apikey:[[${@environment.getProperty("ocr.space.apiKey")}]], language:"eng", isOverlayRequired:"false", base64Image:canvas.toDataURL("image/jpeg", 0.75)},
 	        function(data) {
 	            beep.play();
                 $("#address").text(data.ParsedResults[0].ParsedText);
 	        });
         });
+
         $("#enableBeep").click(function() {
             beep.play();
         });
