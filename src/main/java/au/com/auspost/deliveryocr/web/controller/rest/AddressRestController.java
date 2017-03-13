@@ -1,6 +1,6 @@
-package au.com.auspost.smartspb.web.controller.rest;
+package au.com.auspost.deliveryocr.web.controller.rest;
 
-import au.com.auspost.smartspb.service.OcrSpaceService;
+import au.com.auspost.deliveryocr.service.OcrSpaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +14,8 @@ import java.io.IOException;
 @RequestMapping(path = "/rest")
 public class AddressRestController {
 
+    public static final String WHITESPACE_REGEX = "[\\s,/-]+";
+    public static final String NUMBER_REGEX = "[0-9]";
     @Autowired
     private OcrSpaceService ocrService;
 
@@ -32,7 +34,7 @@ public class AddressRestController {
             lookupValue = ocrImage(imageBase64);
             ocr = true;
         } else if (query != null) {
-            lookupValue = query;
+            lookupValue = buildPredictiveQuery(query);
         } else {
             // Illegal operation
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -42,6 +44,26 @@ public class AddressRestController {
 
         SolrResult result = lookupAddress(lookupValue, roundId);
         return new SearchResult(result, ocr);
+    }
+
+    private String buildPredictiveQuery(String query) {
+        String[] tokens = query.split(WHITESPACE_REGEX);
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < tokens.length; i++) {
+            if (i > 0) {
+                result.append(" ");
+            }
+            result.append(tokens[i]);
+        }
+
+        // If the last character isn't whitespace and the last work doesn't contain a number
+        if (!query.substring(query.length() - 1).matches(WHITESPACE_REGEX) &&
+                !tokens[tokens.length - 1].matches(NUMBER_REGEX)) {
+            // Append wildcard
+            result.append("*");
+        }
+        return result.toString();
     }
 
     private String ocrImage(String imageBase64) {
@@ -56,6 +78,7 @@ public class AddressRestController {
                 .queryParam("indent", "on")
                 .queryParam("q", lookupValue) // query
                 .queryParam("qf", "address^10.0 addressPhonetic^5.0") // query fields
+                .queryParam("mm", 2) // minimum match
                 .queryParam("pf","address^10.0")
                 .queryParam("ps", 1) // phrase slop
                 .queryParam("start", 0)

@@ -1,4 +1,4 @@
-package au.com.auspost.smartspb.service;
+package au.com.auspost.deliveryocr.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;

@@ -1,4 +1,4 @@
-package au.com.auspost.smartspb;
+package au.com.auspost.deliveryocr;
 
 import org.apache.catalina.connector.Connector;
 import org.springframework.boot.SpringApplication;

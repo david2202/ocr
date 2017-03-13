@@ -1,4 +1,4 @@
-package au.com.auspost.smartspb.web.exception;
+package au.com.auspost.deliveryocr.web.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

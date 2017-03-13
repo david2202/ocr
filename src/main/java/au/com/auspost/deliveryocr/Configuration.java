@@ -1,4 +1,4 @@
-package au.com.auspost.smartspb;
+package au.com.auspost.deliveryocr;
 
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.datatype.joda.JodaModule;

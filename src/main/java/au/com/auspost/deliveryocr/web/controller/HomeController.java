@@ -1,4 +1,4 @@
-package au.com.auspost.smartspb.web.controller;
+package au.com.auspost.deliveryocr.web.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;

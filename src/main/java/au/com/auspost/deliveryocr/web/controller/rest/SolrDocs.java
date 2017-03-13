@@ -1,4 +1,4 @@
-package au.com.auspost.smartspb.web.controller.rest;
+package au.com.auspost.deliveryocr.web.controller.rest;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

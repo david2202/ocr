@@ -1,4 +1,4 @@
-package au.com.auspost.smartspb.service;
+package au.com.auspost.deliveryocr.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
