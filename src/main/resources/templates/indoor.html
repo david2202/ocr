@@ -4,7 +4,6 @@
       layout:decorator="layout"
       th:with="currentPage='indoor'">
 <head>
-    <script th:src="@{/scripts/caman.full.min-4.1.1.js}" src="../static/scripts/caman.full.min-4.1.1.js"></script>
     <title>Indoor</title>
     <style>
         @media screen and (max-width: 800px) {
@@ -96,19 +95,16 @@
 	        canvas.height = 240;
 	        canvas.getContext('2d').drawImage(video, 135, 110, 320, 240, 0, 0, 320, 240);
 
-            Caman(canvas, function () {
-              this.greyscale().render();
-            });
+            var imgUrl = canvas.toDataURL("image/jpeg", 0.75);
 
-            $("#image").attr("src", canvas.toDataURL("image/jpeg", 0.75));
+            $("#image").attr("src", imgUrl);
 
-	        $.post("https://apipro3.ocr.space/parse/image", {apikey:[[${@environment.getProperty("ocr.space.apiKey")}]], language:"eng", isOverlayRequired:"false", base64Image:canvas.toDataURL("image/jpeg", 0.75)},
+	        $.post("https://api.ocr.space/parse/image", {apikey:[[${@environment.getProperty("ocr.space.apiKey")}]], language:"eng", isOverlayRequired:"false", base64Image:imgUrl},
 	        function(data) {
 	            beep.play();
                 $("#address").text(data.ParsedResults[0].ParsedText);
-	        });
+           });
         });
-
         $("#enableBeep").click(function() {
             beep.play();
         });
